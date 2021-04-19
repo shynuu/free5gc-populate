@@ -16,7 +16,7 @@ func Run(config string) error {
 
 	for _, imsi := range PopulateConfig.IMSI {
 		smData := generateSubs(imsi, plmnID, PopulateConfig.Slices)
-		log.Printf("%s", smData.UeId)
+		InsertSubscriber(imsi, plmnID, *smData)
 	}
 	return nil
 }
