@@ -3,8 +3,10 @@ package runtime
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/free5gc/MongoDBLibrary"
+	"github.com/free5gc/openapi/models"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -40,6 +42,139 @@ func toBsonA(data interface{}) (ret bson.A) {
 	return
 }
 
+func generateSubs(ueID string, servingPlmnID string, slices []Slice) *SubsData {
+	authSubsData := models.AuthenticationSubscription{
+		AuthenticationManagementField: "8000",
+		AuthenticationMethod:          "5G_AKA", // "5G_AKA", "EAP_AKA_PRIME"
+		Milenage: &models.Milenage{
+			Op: &models.Op{
+				EncryptionAlgorithm: 0,
+				EncryptionKey:       0,
+				OpValue:             PopulateConfig.OP, // Required
+			},
+		},
+		Opc: &models.Opc{
+			EncryptionAlgorithm: 0,
+			EncryptionKey:       0,
+			OpcValue:            PopulateConfig.OP, // Required
+		},
+		PermanentKey: &models.PermanentKey{
+			EncryptionAlgorithm: 0,
+			EncryptionKey:       0,
+			PermanentKeyValue:   PopulateConfig.Key, // Required
+		},
+		SequenceNumber: "16f3b3f70fc2",
+	}
+
+	var sliceArray []models.Snssai = make([]models.Snssai, len(slices))
+	for k, slice := range slices {
+		sliceArray[k] = models.Snssai{
+			Sd:  slice.Sd,
+			Sst: slice.Sst,
+		}
+	}
+
+	amDataData := models.AccessAndMobilitySubscriptionData{
+		Gpsis: []string{
+			"msisdn-0900000000",
+		},
+		Nssai: &models.Nssai{
+			DefaultSingleNssais: sliceArray,
+			SingleNssais:        sliceArray,
+		},
+		SubscribedUeAmbr: &models.AmbrRm{
+			Downlink: "500 Mbps",
+			Uplink:   "500 Mbps",
+		},
+	}
+
+	var smDataData []models.SessionManagementSubscriptionData = make([]models.SessionManagementSubscriptionData, len(slices))
+	for k, slice := range slices {
+		smDataData[k] = models.SessionManagementSubscriptionData{
+			SingleNssai: &models.Snssai{
+				Sst: slice.Sst,
+				Sd:  slice.Sd,
+			},
+			DnnConfigurations: map[string]models.DnnConfiguration{
+				slice.Dnn: {
+					PduSessionTypes: &models.PduSessionTypes{
+						DefaultSessionType:  models.PduSessionType_IPV4,
+						AllowedSessionTypes: []models.PduSessionType{models.PduSessionType_IPV4},
+					},
+					SscModes: &models.SscModes{
+						DefaultSscMode:  models.SscMode__1,
+						AllowedSscModes: []models.SscMode{models.SscMode__1},
+					},
+					SessionAmbr: &models.Ambr{
+						Downlink: "500 Mbps",
+						Uplink:   "500 Mbps",
+					},
+					Var5gQosProfile: &models.SubscribedDefaultQos{
+						Var5qi: int32(slice.VarQI),
+						Arp: &models.Arp{
+							PriorityLevel: 8,
+						},
+						PriorityLevel: 8,
+					},
+				},
+			},
+		}
+	}
+
+	var smfSel map[string]models.SnssaiInfo = make(map[string]models.SnssaiInfo)
+	for _, slice := range slices {
+		snssai := fmt.Sprintf("%02d%s", slice.Sst, slice.Sd)
+		smfSel[snssai] = models.SnssaiInfo{
+			DnnInfos: []models.DnnInfo{
+				{
+					Dnn: slice.Dnn,
+				},
+			},
+		}
+	}
+
+	smfSelData := models.SmfSelectionSubscriptionData{
+		SubscribedSnssaiInfos: smfSel,
+	}
+
+	amPolicyData := models.AmPolicyData{
+		SubscCats: []string{
+			"free5gc",
+		},
+	}
+
+	var smPol map[string]models.SmPolicySnssaiData = make(map[string]models.SmPolicySnssaiData)
+	for _, slice := range slices {
+		snssai := fmt.Sprintf("%02d%s", slice.Sst, slice.Sd)
+		smPol[snssai] = models.SmPolicySnssaiData{
+			Snssai: &models.Snssai{
+				Sd:  slice.Sd,
+				Sst: slice.Sst,
+			},
+			SmPolicyDnnData: map[string]models.SmPolicyDnnData{
+				slice.Dnn: {
+					Dnn: slice.Dnn,
+				},
+			},
+		}
+	}
+
+	smPolicyData := models.SmPolicyData{
+		SmPolicySnssaiData: smPol,
+	}
+
+	return &SubsData{
+		PlmnID:                            servingPlmnID,
+		UeId:                              ueID,
+		AuthenticationSubscription:        authSubsData,
+		AccessAndMobilitySubscriptionData: amDataData,
+		SessionManagementSubscriptionData: smDataData,
+		SmfSelectionSubscriptionData:      smfSelData,
+		AmPolicyData:                      amPolicyData,
+		SmPolicyData:                      smPolicyData,
+	}
+}
+
 func InsertSubscriber(ueId string, servingPlmnId string, subsData SubsData) {
 
 	filterUeIDOnly := bson.M{"ueId": ueId}
@@ -67,13 +202,13 @@ func InsertSubscriber(ueId string, servingPlmnId string, subsData SubsData) {
 	smPolicyDataBsonM := toBsonM(subsData.SmPolicyData)
 	smPolicyDataBsonM["ueId"] = ueId
 
-	flowRulesBsonA := make([]interface{}, 0, len(subsData.FlowRules))
-	for _, flowRule := range subsData.FlowRules {
-		flowRuleBsonM := toBsonM(flowRule)
-		flowRuleBsonM["ueId"] = ueId
-		flowRuleBsonM["servingPlmnId"] = servingPlmnId
-		flowRulesBsonA = append(flowRulesBsonA, flowRuleBsonM)
-	}
+	// flowRulesBsonA := make([]interface{}, 0, len(subsData.FlowRules))
+	// for _, flowRule := range subsData.FlowRules {
+	// 	flowRuleBsonM := toBsonM(flowRule)
+	// 	flowRuleBsonM["ueId"] = ueId
+	// 	flowRuleBsonM["servingPlmnId"] = servingPlmnId
+	// 	flowRulesBsonA = append(flowRulesBsonA, flowRuleBsonM)
+	// }
 
 	MongoDBLibrary.RestfulAPIPost(authSubsDataColl, filterUeIDOnly, authSubsBsonM)
 	MongoDBLibrary.RestfulAPIPost(amDataColl, filter, amDataBsonM)
@@ -81,6 +216,6 @@ func InsertSubscriber(ueId string, servingPlmnId string, subsData SubsData) {
 	MongoDBLibrary.RestfulAPIPost(smfSelDataColl, filter, smfSelSubsBsonM)
 	MongoDBLibrary.RestfulAPIPost(amPolicyDataColl, filterUeIDOnly, amPolicyDataBsonM)
 	MongoDBLibrary.RestfulAPIPost(smPolicyDataColl, filterUeIDOnly, smPolicyDataBsonM)
-	MongoDBLibrary.RestfulAPIPostMany(flowRuleDataColl, filter, flowRulesBsonA)
+	// MongoDBLibrary.RestfulAPIPostMany(flowRuleDataColl, filter, flowRulesBsonA)
 
 }

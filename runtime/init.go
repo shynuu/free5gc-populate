@@ -1,18 +1,22 @@
 package runtime
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 func Run(config string) error {
 	err := ParseConf(config)
+	log.Println("Inserting subscribers into database")
 	if err != nil {
 		return err
 	}
 
-	for _, i := range PopulateConfig.Slices {
-		fmt.Println(i)
-	}
-	for _, i := range PopulateConfig.IMSI {
-		fmt.Println(i)
+	var plmnID string = fmt.Sprintf("%s%s", PopulateConfig.MCC, PopulateConfig.MNC)
+
+	for _, imsi := range PopulateConfig.IMSI {
+		smData := generateSubs(imsi, plmnID, PopulateConfig.Slices)
+		log.Printf("%s", smData.UeId)
 	}
 	return nil
 }

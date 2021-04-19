@@ -25,7 +25,7 @@ type Mongodb struct {
 }
 
 type Slice struct {
-	Sst   uint8  `yaml:"sst"`
+	Sst   int32  `yaml:"sst"`
 	Sd    string `yaml:"sd"`
 	VarQI uint8  `yaml:"varqi"`
 	Dnn   string `yaml:"dnn"`
