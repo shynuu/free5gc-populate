@@ -50,7 +50,7 @@ func generateSubs(ueID string, servingPlmnID string, slices []Slice) *SubsData {
 			Op: &models.Op{
 				EncryptionAlgorithm: 0,
 				EncryptionKey:       0,
-				OpValue:             PopulateConfig.OP, // Required
+				OpValue:             "", // Required
 			},
 		},
 		Opc: &models.Opc{
