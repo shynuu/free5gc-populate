@@ -46,13 +46,13 @@ func generateSubs(ueID string, servingPlmnID string, slices []Slice) *SubsData {
 	authSubsData := models.AuthenticationSubscription{
 		AuthenticationManagementField: "8000",
 		AuthenticationMethod:          "5G_AKA", // "5G_AKA", "EAP_AKA_PRIME"
-		// Milenage: &models.Milenage{
-		// 	Op: &models.Op{
-		// 		EncryptionAlgorithm: 0,
-		// 		EncryptionKey:       0,
-		// 		OpValue:             PopulateConfig.OP, // Required
-		// 	},
-		// },
+		Milenage: &models.Milenage{
+			Op: &models.Op{
+				EncryptionAlgorithm: 0,
+				EncryptionKey:       0,
+				OpValue:             PopulateConfig.OP, // Required
+			},
+		},
 		Opc: &models.Opc{
 			EncryptionAlgorithm: 0,
 			EncryptionKey:       0,
