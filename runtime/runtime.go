@@ -50,7 +50,7 @@ func generateSubs(ueID string, servingPlmnID string, slices []Slice) *SubsData {
 			Op: &models.Op{
 				EncryptionAlgorithm: 0,
 				EncryptionKey:       0,
-				OpValue:             "8e27b6af0e692e750f32667a3b14605a", // Required
+				OpValue:             PopulateConfig.OP, // Required
 			},
 		},
 		Opc: &models.Opc{
@@ -63,7 +63,7 @@ func generateSubs(ueID string, servingPlmnID string, slices []Slice) *SubsData {
 			EncryptionKey:       0,
 			PermanentKeyValue:   PopulateConfig.Key, // Required
 		},
-		SequenceNumber: "16f3b3f70fc2",
+		SequenceNumber: PopulateConfig.SQN, // Required
 	}
 
 	var sliceArray []models.Snssai = make([]models.Snssai, len(slices))

@@ -15,6 +15,7 @@ type Config struct {
 	MNC    string   `yaml:"mnc"`
 	Key    string   `yaml:"key"`
 	OP     string   `yaml:"op"`
+	SQN    string   `yaml:"sqn"`
 	Slices []Slice  `yaml:"slices"`
 	IMSI   []string `yaml:"imsi"`
 }
