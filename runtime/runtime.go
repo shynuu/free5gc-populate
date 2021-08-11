@@ -20,23 +20,7 @@ const (
 	flowRuleDataColl = "policyData.ues.flowRule"
 )
 
-func mapToByte(data map[string]interface{}) (ret []byte) {
-	ret, _ = json.Marshal(data)
-	return
-}
-
-func sliceToByte(data []map[string]interface{}) (ret []byte) {
-	ret, _ = json.Marshal(data)
-	return
-}
-
 func toBsonM(data interface{}) (ret bson.M) {
-	tmp, _ := json.Marshal(data)
-	json.Unmarshal(tmp, &ret)
-	return
-}
-
-func toBsonA(data interface{}) (ret bson.A) {
 	tmp, _ := json.Marshal(data)
 	json.Unmarshal(tmp, &ret)
 	return
@@ -88,7 +72,7 @@ func generateSubs(ueID string, servingPlmnID string, slices []Slice) *SubsData {
 		},
 	}
 
-	var smDataData []models.SessionManagementSubscriptionData = make([]models.SessionManagementSubscriptionData, len(slices))
+	var smDataData = make([]models.SessionManagementSubscriptionData, len(slices))
 	for k, slice := range slices {
 		smDataData[k] = models.SessionManagementSubscriptionData{
 			SingleNssai: &models.Snssai{
@@ -121,7 +105,7 @@ func generateSubs(ueID string, servingPlmnID string, slices []Slice) *SubsData {
 		}
 	}
 
-	var smfSel map[string]models.SnssaiInfo = make(map[string]models.SnssaiInfo)
+	var smfSel = make(map[string]models.SnssaiInfo)
 	for _, slice := range slices {
 		snssai := fmt.Sprintf("%02d%s", slice.Sst, slice.Sd)
 		smfSel[snssai] = models.SnssaiInfo{
@@ -143,7 +127,7 @@ func generateSubs(ueID string, servingPlmnID string, slices []Slice) *SubsData {
 		},
 	}
 
-	var smPol map[string]models.SmPolicySnssaiData = make(map[string]models.SmPolicySnssaiData)
+	var smPol = make(map[string]models.SmPolicySnssaiData)
 	for _, slice := range slices {
 		snssai := fmt.Sprintf("%02d%s", slice.Sst, slice.Sd)
 		smPol[snssai] = models.SmPolicySnssaiData{
