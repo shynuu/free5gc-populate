@@ -28,7 +28,7 @@ func toBsonM(data interface{}) (ret bson.M) {
 
 func generateSubs(ueID string, servingPlmnID string, slices []Slice) *SubsData {
 	authSubsData := models.AuthenticationSubscription{
-		AuthenticationManagementField: "8000",
+		AuthenticationManagementField: PopulateConfig.AMF,
 		AuthenticationMethod:          "5G_AKA", // "5G_AKA", "EAP_AKA_PRIME"
 		Milenage: &models.Milenage{
 			Op: &models.Op{
@@ -50,7 +50,7 @@ func generateSubs(ueID string, servingPlmnID string, slices []Slice) *SubsData {
 		SequenceNumber: PopulateConfig.SQN, // Required
 	}
 
-	var sliceArray []models.Snssai = make([]models.Snssai, len(slices))
+	var sliceArray = make([]models.Snssai, len(slices))
 	for k, slice := range slices {
 		sliceArray[k] = models.Snssai{
 			Sd:  slice.Sd,

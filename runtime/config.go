@@ -16,6 +16,7 @@ type Config struct {
 	Key    string   `yaml:"key"`
 	OP     string   `yaml:"op"`
 	SQN    string   `yaml:"sqn"`
+	AMF    string   `yaml:"amf"`
 	Slices []Slice  `yaml:"slices"`
 	IMSI   []string `yaml:"imsi"`
 }
