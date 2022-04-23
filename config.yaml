@@ -1,7 +1,7 @@
 # Mongo Configuration
 mongo:
   name: free5gc
-  url: http://mongo
+  url: mongodb://localhost:27017
 
 # Mobile Country Code value of HPLMN
 mcc: "208"
