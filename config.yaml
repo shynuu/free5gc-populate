@@ -14,8 +14,7 @@ op: 8e27b6af0e692e750f32667a3b14605d
 # Sequence number
 sqn: 16f3b3f70fc2
 # Authentication Management Field
-amf: 9001 
-
+amf: 8000
 
 # List all the slices
 slices:
