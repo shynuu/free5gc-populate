@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-
+	log.SetPrefix("[free5gc-populate]")
 	var config string = ""
 
 	app := &cli.App{
