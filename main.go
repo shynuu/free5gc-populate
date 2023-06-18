@@ -13,8 +13,9 @@ func main() {
 	var config string = ""
 
 	app := &cli.App{
-		Name:  "free5gc-populate",
-		Usage: "Populate free5gc mondo database from a config file",
+		Name:                 "free5gc-populate",
+		Usage:                "Populate free5gc mondo database from a config file",
+		EnableBashCompletion: true,
 		Authors: []*cli.Author{
 			{Name: "Youssouf Drif"},
 		},
