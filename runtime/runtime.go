@@ -4,10 +4,11 @@ package runtime
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
-	"github.com/free5gc/MongoDBLibrary"
 	"github.com/free5gc/openapi/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const (
@@ -74,6 +75,19 @@ func generateSubs(ueID string, servingPlmnID string, slices []Slice) *SubsData {
 
 	var smDataData = make([]models.SessionManagementSubscriptionData, len(slices))
 	for k, slice := range slices {
+		// PduSessionType is IPv4 by default
+		var pduSessionType models.PduSessionType
+		if slice.PduSessionType == nil {
+			pduSessionType = models.PduSessionType_IPV4
+		} else {
+			switch *slice.PduSessionType {
+			case models.PduSessionType_IPV4, models.PduSessionType_IPV6, models.PduSessionType_IPV4_V6,
+				models.PduSessionType_UNSTRUCTURED, models.PduSessionType_ETHERNET:
+			default:
+				log.Printf("Unknown Pdu Session Type: `%s`\n", *slice.PduSessionType)
+				pduSessionType = models.PduSessionType_IPV4
+			}
+		}
 		smDataData[k] = models.SessionManagementSubscriptionData{
 			SingleNssai: &models.Snssai{
 				Sst: slice.Sst,
@@ -82,8 +96,8 @@ func generateSubs(ueID string, servingPlmnID string, slices []Slice) *SubsData {
 			DnnConfigurations: map[string]models.DnnConfiguration{
 				slice.Dnn: {
 					PduSessionTypes: &models.PduSessionTypes{
-						DefaultSessionType:  models.PduSessionType_IPV4,
-						AllowedSessionTypes: []models.PduSessionType{models.PduSessionType_IPV4},
+						DefaultSessionType:  pduSessionType,
+						AllowedSessionTypes: []models.PduSessionType{pduSessionType},
 					},
 					SscModes: &models.SscModes{
 						DefaultSscMode:  models.SscMode__1,
@@ -159,7 +173,7 @@ func generateSubs(ueID string, servingPlmnID string, slices []Slice) *SubsData {
 	}
 }
 
-func InsertSubscriber(ueId string, servingPlmnId string, subsData SubsData) {
+func InsertSubscriber(client *mongo.Client, dbname string, ueId string, servingPlmnId string, subsData SubsData) error {
 
 	filterUeIDOnly := bson.M{"ueId": ueId}
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
@@ -194,12 +208,24 @@ func InsertSubscriber(ueId string, servingPlmnId string, subsData SubsData) {
 	// 	flowRulesBsonA = append(flowRulesBsonA, flowRuleBsonM)
 	// }
 
-	MongoDBLibrary.RestfulAPIPost(authSubsDataColl, filterUeIDOnly, authSubsBsonM)
-	MongoDBLibrary.RestfulAPIPost(amDataColl, filter, amDataBsonM)
-	MongoDBLibrary.RestfulAPIPostMany(smDataColl, filter, smDatasBsonA)
-	MongoDBLibrary.RestfulAPIPost(smfSelDataColl, filter, smfSelSubsBsonM)
-	MongoDBLibrary.RestfulAPIPost(amPolicyDataColl, filterUeIDOnly, amPolicyDataBsonM)
-	MongoDBLibrary.RestfulAPIPost(smPolicyDataColl, filterUeIDOnly, smPolicyDataBsonM)
+	if _, err := RestfulAPIPost(client, dbname, authSubsDataColl, filterUeIDOnly, authSubsBsonM); err != nil {
+		return err
+	}
+	if _, err := RestfulAPIPost(client, dbname, amDataColl, filter, amDataBsonM); err != nil {
+		return err
+	}
+	if _, err := RestfulAPIPostMany(client, dbname, smDataColl, filter, smDatasBsonA); err != nil {
+		return err
+	}
+	if _, err := RestfulAPIPost(client, dbname, smfSelDataColl, filter, smfSelSubsBsonM); err != nil {
+		return err
+	}
+	if _, err := RestfulAPIPost(client, dbname, amPolicyDataColl, filterUeIDOnly, amPolicyDataBsonM); err != nil {
+		return err
+	}
+	if _, err := RestfulAPIPost(client, dbname, smPolicyDataColl, filterUeIDOnly, smPolicyDataBsonM); err != nil {
+		return err
+	}
 	// MongoDBLibrary.RestfulAPIPostMany(flowRuleDataColl, filter, flowRulesBsonA)
-
+	return nil
 }

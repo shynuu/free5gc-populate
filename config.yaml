@@ -26,6 +26,10 @@ slices:
     sd: 112233
     varqi: 9
     dnn: internet2
+    # PDU Sessions Type for this slice
+    # possible values are: "IPV4", "IPV6", "IPV4V6", "UNSTRUCTURED", "ETHERNET"
+    # when omitted, results in "IPV4"
+    pdu-session-type: "IPV4V6" 
 
 # All IMSI of UEs
 imsi:

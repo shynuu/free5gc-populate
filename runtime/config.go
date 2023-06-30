@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/free5gc/openapi/models"
 	"gopkg.in/yaml.v2"
 )
 
@@ -31,6 +32,8 @@ type Slice struct {
 	Sd    string `yaml:"sd"`
 	VarQI uint8  `yaml:"varqi"`
 	Dnn   string `yaml:"dnn"`
+	// IPV4, IPV6, IPV4V6, UNSTRUCTURED, ETHERNET. Default is IPV4
+	PduSessionType *models.PduSessionType `yaml:"pdu-session-type,omitempty"`
 }
 
 // ParseConf read the yaml file and populate the Config instancce
