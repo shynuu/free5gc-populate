@@ -31,24 +31,12 @@ func generateSubs(ueID string, servingPlmnID string, slices []Slice) *SubsData {
 	authSubsData := models.AuthenticationSubscription{
 		AuthenticationManagementField: PopulateConfig.AMF,
 		AuthenticationMethod:          "5G_AKA", // "5G_AKA", "EAP_AKA_PRIME"
-		Milenage: &models.Milenage{
-			Op: &models.Op{
-				EncryptionAlgorithm: 0,
-				EncryptionKey:       0,
-				OpValue:             PopulateConfig.OP, // Required
-			},
+		EncOpcKey:                     PopulateConfig.OP,
+		EncPermanentKey:               PopulateConfig.Key,
+		SequenceNumber: &models.SequenceNumber{
+			SqnScheme: models.SqnScheme_GENERAL,
+			Sqn:       PopulateConfig.SQN, // Required
 		},
-		Opc: &models.Opc{
-			EncryptionAlgorithm: 0,
-			EncryptionKey:       0,
-			OpcValue:            PopulateConfig.OP, // Required
-		},
-		PermanentKey: &models.PermanentKey{
-			EncryptionAlgorithm: 0,
-			EncryptionKey:       0,
-			PermanentKeyValue:   PopulateConfig.Key, // Required
-		},
-		SequenceNumber: PopulateConfig.SQN, // Required
 	}
 
 	var sliceArray = make([]models.Snssai, len(slices))
@@ -174,7 +162,6 @@ func generateSubs(ueID string, servingPlmnID string, slices []Slice) *SubsData {
 }
 
 func InsertSubscriber(client *mongo.Client, dbname string, ueId string, servingPlmnId string, subsData SubsData) error {
-
 	filterUeIDOnly := bson.M{"ueId": ueId}
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
 
